@@ -1,18 +1,23 @@
-var fs = require('fs');
+//For secure connection:
+// const fs = require('fs');
 const { Pool } = require('pg')
 
 // Configure the database connection.
 
-var config = {
+const config = {
     user: 'max',
     password: 'roach',
     host: 'localhost',
     database: 'bank',
-    port: 26257,
+    port: 26257,  
     ssl: {
-        ca: fs.readFileSync('certs/ca.crt')
+        rejectUnauthorized: false,
+    },
+    //For secure connection:
+    /*ssl: {
+        ca: fs.readFileSync('/certs/ca.crt')
             .toString()
-    }
+    }*/
 };
 
 // Create a connection pool
