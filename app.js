@@ -40,7 +40,7 @@ async function retryTxn(n, max, client, operation, callback) {
       await client.query("COMMIT;");
       return;
     } catch (err) {
-      if (err.code != "40001") {
+      if (err.code !== "40001") {
         return callback(err);
       } else {
         console.log("Transaction failed. Retrying transaction.");
@@ -72,9 +72,9 @@ async function transferFunds(client, callback) {
   const from = 1;
   const to = 2;
   const amount = 100;
-  var statement = "SELECT balance FROM accounts WHERE id = $1 ;";
-  var values = [from];
-  await client.query(statement, values, (err, res) => {
+  const selectFromBalanceStatement = "SELECT balance FROM accounts WHERE id = $1 ;";
+  const selectFromValues = [from];
+  await client.query(selectFromBalanceStatement, selectFromValues, (err, res) => {
     if (err) {
       return callback(err);
     } else if (res.rows.length === 0) {
@@ -87,16 +87,16 @@ async function transferFunds(client, callback) {
     }
   });
 
-  var statement = "UPDATE accounts SET balance = balance - $1 WHERE id = $2 ;";
-  var values = [amount, from];
-  await client.query(statement, values, callback);
+  const updateFromBalanceStatement = "UPDATE accounts SET balance = balance - $1 WHERE id = $2 ;";
+  const updateFromValues = [amount, from];
+  await client.query(updateFromBalanceStatement, updateFromValues, callback);
 
-  var statement = "UPDATE accounts SET balance = balance + $1 WHERE id = $2 ;";
-  var values = [amount, to];
-  await client.query(statement, values, callback);
+  const updateToBalanceStatement = "UPDATE accounts SET balance = balance + $1 WHERE id = $2 ;";
+  const updateToValues = [amount, to];
+  await client.query(updateToBalanceStatement, updateToValues, callback);
 
-  var statement = "SELECT id, balance FROM accounts;";
-  await client.query(statement, callback);
+  const selectBalanceStatement = "SELECT id, balance FROM accounts;";
+  await client.query(selectBalanceStatement, callback);
 }
 
 // Run the transactions in the connection pool
