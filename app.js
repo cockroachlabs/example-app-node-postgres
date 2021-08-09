@@ -4,7 +4,7 @@ const prompt = require("prompt");
 const { execSync } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
 
-let accountValues = Array(3); 
+var accountValues = Array(3);
 
 // Wrapper for a transaction.  This automatically re-calls the operation with
 // the client as an argument as long as the database server asks for
@@ -43,12 +43,12 @@ async function initTable(client, callback) {
     i++;
   }
 
-  const insertStatement = "INSERT INTO accounts (id, balance) VALUES ($1, 1000), ($2, 250), ($3, 0);"
+  const insertStatement =
+    "INSERT INTO accounts (id, balance) VALUES ($1, 1000), ($2, 250), ($3, 0);";
   await client.query(insertStatement, accountValues, callback);
 
   const selectBalanceStatement = "SELECT id, balance FROM accounts;";
   await client.query(selectBalanceStatement, callback);
-
 }
 
 // This function updates the values of two rows, simulating a "transfer" of funds.
@@ -56,26 +56,33 @@ async function transferFunds(client, callback) {
   const from = accountValues[0];
   const to = accountValues[1];
   const amount = 100;
-  const selectFromBalanceStatement = "SELECT balance FROM accounts WHERE id = $1;";
+  const selectFromBalanceStatement =
+    "SELECT balance FROM accounts WHERE id = $1;";
   const selectFromValues = [from];
-  await client.query(selectFromBalanceStatement, selectFromValues, (err, res) => {
-    if (err) {
-      return callback(err);
-    } else if (res.rows.length === 0) {
-      console.log("account not found in table");
-      return callback(err);
+  await client.query(
+    selectFromBalanceStatement,
+    selectFromValues,
+    (err, res) => {
+      if (err) {
+        return callback(err);
+      } else if (res.rows.length === 0) {
+        console.log("account not found in table");
+        return callback(err);
+      }
+      var acctBal = res.rows[0].balance;
+      if (acctBal < amount) {
+        return callback(new Error("insufficient funds"));
+      }
     }
-    var acctBal = res.rows[0].balance;
-    if (acctBal < amount) {
-      return callback(new Error("insufficient funds"));
-    }
-  });
+  );
 
-  const updateFromBalanceStatement = "UPDATE accounts SET balance = balance - $1 WHERE id = $2;";
+  const updateFromBalanceStatement =
+    "UPDATE accounts SET balance = balance - $1 WHERE id = $2;";
   const updateFromValues = [amount, from];
   await client.query(updateFromBalanceStatement, updateFromValues, callback);
 
-  const updateToBalanceStatement = "UPDATE accounts SET balance = balance + $1 WHERE id = $2;";
+  const updateToBalanceStatement =
+    "UPDATE accounts SET balance = balance + $1 WHERE id = $2;";
   const updateToValues = [amount, to];
   await client.query(updateToBalanceStatement, updateToValues, callback);
 
@@ -85,33 +92,33 @@ async function transferFunds(client, callback) {
 
 // This function deletes the third row in the accounts table.
 async function deleteAccounts(client, callback) {
-
-  const deleteStatement = "DELETE FROM accounts WHERE id = $1;"
+  const deleteStatement = "DELETE FROM accounts WHERE id = $1;";
   await client.query(deleteStatement, [accountValues[2]], callback);
 
   const selectBalanceStatement = "SELECT id, balance FROM accounts;";
   await client.query(selectBalanceStatement, callback);
-
 }
 
 // Run the transactions in the connection pool
 (async () => {
-
-  prompt.start()
+  prompt.start();
   const URI = await prompt.get("connectionString");
-  const connectionString = await URI.connectionString.replace('$HOME', process.env.HOME);
+  const connectionString = await URI.connectionString.replace(
+    "$HOME",
+    process.env.HOME
+  );
   console.log("Initializing bank database...");
-  const command = `cockroach sql --url '${connectionString}' < dbinit.sql`
+  const command = `cockroach sql --url '${connectionString}' < dbinit.sql`;
   await execSync(command, (err) => {
     console.log(command);
     if (err) {
-      console.log(`error: ${err}`)
+      console.log(`error: ${err}`);
       return;
     }
   });
   var config = parse(connectionString);
   config.port = 26257;
-  config.database = 'bank';
+  config.database = "bank";
   const pool = new Pool(config);
 
   // Connect to database
