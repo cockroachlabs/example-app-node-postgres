@@ -1,7 +1,6 @@
 const parse = require("pg-connection-string").parse;
 const { Pool } = require("pg");
 const prompt = require("prompt");
-const { execSync } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
 
 var accountValues = Array(3);
@@ -112,7 +111,7 @@ async function deleteAccounts(client, callback) {
     );
   }
   // Expand $HOME environment variable in UNIX connection string
-  else {
+  else if (URI.connectionString.includes("HOME")){
     connectionString = await URI.connectionString.replace(
       "$HOME",
       process.env.HOME
