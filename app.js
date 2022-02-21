@@ -102,21 +102,15 @@ async function deleteAccounts(client, callback) {
 (async () => {
   prompt.start();
   const URI = await prompt.get("connectionString");
-  var connectionString;
-  // Expand $env:appdata environment variable in Windows connection string
-  if (URI.connectionString.includes("env:appdata")) {
-    connectionString = await URI.connectionString.replace(
-      "$env:appdata",
-      process.env.APPDATA
-    );
-  }
-  // Expand $HOME environment variable in UNIX connection string
-  else if (URI.connectionString.includes("HOME")){
-    connectionString = await URI.connectionString.replace(
-      "$HOME",
-      process.env.HOME
-    );
-  }
+  const connectionString = URI.connectionString.replace(
+    // Expand $env:appdata environment variable in Windows connection string
+    "$env:appdata",
+    process.env.APPDATA
+  ).replace(
+    // Expand $HOME environment variable in UNIX connection string
+    "$HOME",
+    process.env.HOME
+  );
   var config = parse(connectionString);
   config.port = 26257;
   config.database = "bank";
