@@ -1,6 +1,4 @@
-const parse = require("pg-connection-string").parse;
 const { Pool } = require("pg");
-const prompt = require("prompt");
 const { v4: uuidv4 } = require("uuid");
 
 var accountValues = Array(3);
@@ -100,27 +98,10 @@ async function deleteAccounts(client, callback) {
 
 // Run the transactions in the connection pool
 (async () => {
-  prompt.start();
-  const URI = await prompt.get("connectionString");
-  var connectionString;
-  // Expand $env:appdata environment variable in Windows connection string
-  if (URI.connectionString.includes("env:appdata")) {
-    connectionString = await URI.connectionString.replace(
-      "$env:appdata",
-      process.env.APPDATA
-    );
-  }
-  // Expand $HOME environment variable in UNIX connection string
-  else if (URI.connectionString.includes("HOME")){
-    connectionString = await URI.connectionString.replace(
-      "$HOME",
-      process.env.HOME
-    );
-  }
-  var config = parse(connectionString);
-  config.port = 26257;
-  config.database = "bank";
-  const pool = new Pool(config);
+  const connectionString = process.env.DATABASE_URL;
+  const pool = new Pool({
+    connectionString,
+  });
 
   // Connect to database
   const client = await pool.connect();
