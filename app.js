@@ -7,26 +7,28 @@ var accountValues = Array(3);
 // the client as an argument as long as the database server asks for
 // the transaction to be retried.
 async function retryTxn(n, max, client, operation, callback) {
-  await client.query("BEGIN;");
+  const backoffInterval = 100; // millis
+  const maxTries = 5;
+  let tries = 0;
+
   while (true) {
-    n++;
-    if (n === max) {
-      throw new Error("Max retry count reached.");
-    }
+    await client.query('BEGIN;');
+
+    tries++;
+    
     try {
-      await operation(client, callback);
-      await client.query("COMMIT;");
-      return;
+      const result = await operation(client, callback);
+      await client.query('COMMIT;');
+      return result;
     } catch (err) {
-      if (err.code !== "40001") {
-        return callback(err);
+      await client.query('ROLLBACK;');
+
+      if (err.code !== '40001' || tries == maxTries) {  
+        throw err;
       } else {
-        console.log("Transaction failed. Retrying transaction.");
+        console.log('Transaction failed. Retrying.');
         console.log(err.message);
-        await client.query("ROLLBACK;", () => {
-          console.log("Rolling back transaction.");
-        });
-        await new Promise((r) => setTimeout(r, 2 ** n * 1000));
+        await new Promise(r => setTimeout(r, tries * backoffInterval));
       }
     }
   }
