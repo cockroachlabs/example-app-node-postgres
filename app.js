@@ -15,7 +15,7 @@ async function retryTxn(n, max, client, operation, callback) {
     await client.query('BEGIN;');
 
     tries++;
-    
+
     try {
       const result = await operation(client, callback);
       await client.query('COMMIT;');
@@ -23,7 +23,7 @@ async function retryTxn(n, max, client, operation, callback) {
     } catch (err) {
       await client.query('ROLLBACK;');
 
-      if (err.code !== '40001' || tries == maxTries) {  
+      if (err.code !== '40001' || tries == maxTries) {
         throw err;
       } else {
         console.log('Transaction failed. Retrying.');
@@ -103,6 +103,7 @@ async function deleteAccounts(client, callback) {
   const connectionString = process.env.DATABASE_URL;
   const pool = new Pool({
     connectionString,
+    application_name: "$ docs_simplecrud_node-postgres",
   });
 
   // Connect to database
